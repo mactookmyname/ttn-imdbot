@@ -16,7 +16,10 @@ module.exports = IMDBot;
  */
 function IMDBot(options) {
   this.options = options;
-  this.bot = new Bot(this.options.account);
+  this.bot = new Bot({
+    username: process.env.BOT_USERNAME,
+    password: process.env.BOT_PASSWORD
+  });
   this.onMessage = this.onMessage.bind(this);
   this.onSocket = this.onSocket.bind(this);
   this.getImdb = this.getImdb.bind(this);

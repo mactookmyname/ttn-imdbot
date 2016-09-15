@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "A bot which runs on thetreesnetwork to display information from imdb.",
   "dependencies": {
+    "foreman": "2.0.0",
     "imdb-api": "^2.0.0",
     "imgur": "^0.1.7",
     "jsonfile": "~1.2.0",
@@ -17,7 +18,7 @@
     "url": "https://github.com/mactookmyname/ttn-imdbot.git"
   },
   "scripts": {
-    "imdbot": "node src/imdbot/index.js"
+    "start": "nf start"
   },
   "author": "Joel McMurray <joel.mcmurray@gmail.com>",
   "license": "MIT"

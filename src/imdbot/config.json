@@ -1,7 +1,5 @@
 {
-  "account": {
-  },
-  "broadcastChannel": "imdbtest",
+  "broadcastChannel": "imdb",
   "blacklist": [
     "The Trees Network",
     "Off the Air"
