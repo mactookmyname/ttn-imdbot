@@ -1,0 +1,24 @@
+{
+  "name": "ttn-imdbot",
+  "version": "0.1.0",
+  "description": "A bot which runs on thetreesnetwork to display information from imdb.",
+  "dependencies": {
+    "imdb-api": "^2.0.0",
+    "imgur": "^0.1.7",
+    "jsonfile": "~1.2.0",
+    "lodash": "^4.15.0",
+    "primus": "~2.4.3",
+    "request": "~2.40.0",
+    "ws": "~0.4.32"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mactookmyname/ttn-imdbot.git"
+  },
+  "scripts": {
+    "imdbot": "node src/imdbot/index.js"
+  },
+  "author": "Joel McMurray <joel.mcmurray@gmail.com>",
+  "license": "MIT"
+}

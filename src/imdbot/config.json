@@ -1,0 +1,10 @@
+{
+  "account": {
+  },
+  "broadcastChannel": "imdbtest",
+  "blacklist": [
+    "The Trees Network",
+    "Off the Air"
+  ],
+  "minimumDuration": 1200
+}
