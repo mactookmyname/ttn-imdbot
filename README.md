@@ -1,1 +1,2 @@
 # ttn-imdbot
+A bot.
