@@ -4,6 +4,7 @@ const util = require('util');
 const imdb = require('imdb-api');
 const imgur = require('imgur');
 const _ = require('lodash');
+const getTrivia = require('./trivia');
 
 /**
  * IMDBot
@@ -34,6 +35,8 @@ IMDBot.prototype.initialize = function () {
 IMDBot.prototype.resetState = function () {
   this.state = {
     imdb: false,
+    trivia: [],
+    triviaIndex: 0,
   };
 };
 
@@ -83,6 +86,15 @@ IMDBot.prototype.getImdb = function (data) {
     // eslint-disable-next-line
     this.state.imdb.header = `Now Playing: ${imdbData.title} (${imdbData._year_data}) - ${imdbData.rating}/10 - ${imdbData.imdburl}`;
 
+    getTrivia(`${imdbData.imdburl}/trivia`, (triviaError, triviaData) => {
+      if (triviaError) {
+        return this.bot.log(`Unable to get trivia for ${name}`, triviaError);
+      }
+
+      this.state.trivia = _.shuffle(triviaData);
+      return this.bot.log(`${triviaData.length} pieces of trivia fetched for ${name}.`);
+    });
+
     return imgur.uploadUrl(imdbData.poster).then((json) => {
       this.state.imdb.poster = json.data.link;
       this.postToChannel(this.state.imdb);
@@ -96,10 +108,24 @@ IMDBot.prototype.onMessage = function (data) {
   if (typeof data.message === 'string') {
     const message = data.message.trim().toLowerCase();
 
+    const triviaRegEx = new RegExp(`^(#${process.env.BROADCAST_CHANNEL} !trivia)|(!trivia #${process.env.BROADCAST_CHANNEL})`, 'i');
+
     if (message.match(/^!imdb/i)) {
       this.whisperImdb(data.user);
+    } else if (message.match(triviaRegEx)) {
+      this.bot.log(`Sending trivia to room at request of ${data.user.username}`);
+      this.broadcastTrivia();
     }
   }
+};
+
+IMDBot.prototype.broadcastTrivia = function () {
+  const i = this.state.triviaIndex;
+  const title = this.state.imdb.title;
+  const trivia = this.state.trivia[i];
+
+  this.sendMessages(this.splitMessage(`${title} Trivia ${i + 1} out of ${this.state.trivia.length}: ${trivia}`));
+  this.state.triviaIndex = i === (this.state.trivia.length - 1) ? 0 : i + 1;
 };
 
 IMDBot.prototype.postToChannel = function (imdbData) {
@@ -109,6 +135,7 @@ IMDBot.prototype.postToChannel = function (imdbData) {
     imdbData.poster,
     imdbData.header,
     ...this.splitMessage(imdbData.plot),
+    'Additional commands available in this channel: !trivia',
   ];
 
   this.sendMessages(messages);

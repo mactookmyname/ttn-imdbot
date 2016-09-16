@@ -10,3 +10,4 @@ Main Bot code lifted from [treesnetwork-bot](https://github.com/simonify/treesne
 ## TODO
 * Handle titles with multiple imdb results (current [imdb-api](https://github.com/worr/node-imdb-api) only returns a single response)
 * Add support for displaying imdb trivia in channel
+* Convert to use https://github.com/treesnetwork/bot as base

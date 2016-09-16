@@ -10,7 +10,8 @@
     "lodash": "^4.15.0",
     "primus": "~2.4.3",
     "request": "~2.40.0",
-    "ws": "~0.4.32"
+    "ws": "~0.4.32",
+    "x-ray": "^2.3.0"
   },
   "devDependencies": {
     "eslint": "^3.5.0",
