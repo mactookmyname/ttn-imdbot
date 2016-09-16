@@ -1,8 +1,8 @@
 const Bot = require('../index');
 const EventEmitter = require('events').EventEmitter;
 const util = require('util');
-const imdb = require('imdb-api');
 const imgur = require('imgur');
+const request = require('request');
 const _ = require('lodash');
 const getTrivia = require('./trivia');
 
@@ -76,17 +76,31 @@ IMDBot.prototype.getImdb = function (data) {
   // Removes trailing year names on title which causes api lookup to fail
   const name = this.stripYear(data.name);
 
-  return imdb.getReq({ name }, (err, imdbData) => {
+  // Searches specifically for series instead of movie for shorter durations
+  const type = data.duration < this.options.seriesDuration ? 'series' : 'movie';
+
+  const imdbOptions = {
+    uri: 'http://www.omdbapi.com/?',
+    json: true,
+    qs: {
+      type,
+      t: name,
+      plot: 'full',
+      r: 'json',
+    },
+  };
+
+  return request(imdbOptions, (err, response, imdbData) => {
     if (err) {
       return this.bot.log(`Error fetching IMDB data for ${name}.`, err);
     }
 
     this.state.imdb = imdbData;
+    const imdburl = `http://www.imdb.com/title/${imdbData.imdbID}`;
 
-    // eslint-disable-next-line
-    this.state.imdb.header = `Now Playing: ${imdbData.title} (${imdbData._year_data}) - ${imdbData.rating}/10 - ${imdbData.imdburl}`;
+    this.state.imdb.header = `Now Playing: ${imdbData.Title} (${imdbData.Year}) - ${imdbData.rating}/10 - ${imdburl}`;
 
-    getTrivia(`${imdbData.imdburl}/trivia`, (triviaError, triviaData) => {
+    getTrivia(`${imdburl}/trivia`, (triviaError, triviaData) => {
       if (triviaError) {
         return this.bot.log(`Unable to get trivia for ${name}`, triviaError);
       }
@@ -95,8 +109,8 @@ IMDBot.prototype.getImdb = function (data) {
       return this.bot.log(`${triviaData.length} pieces of trivia fetched for ${name}.`);
     });
 
-    return imgur.uploadUrl(imdbData.poster).then((json) => {
-      this.state.imdb.poster = json.data.link;
+    return imgur.uploadUrl(imdbData.Poster).then((json) => {
+      this.state.imdb.Poster = json.data.link;
       this.postToChannel(this.state.imdb);
     }).catch((imgurError) => {
       this.bot.error('Error uploading to imgur', imgurError.message);
@@ -121,7 +135,7 @@ IMDBot.prototype.onMessage = function (data) {
 
 IMDBot.prototype.broadcastTrivia = function () {
   const i = this.state.triviaIndex;
-  const title = this.state.imdb.title;
+  const title = this.state.imdb.Title;
   const trivia = this.state.trivia[i];
 
   this.sendMessages(this.splitMessage(`${title} Trivia ${i + 1} out of ${this.state.trivia.length}: ${trivia}`));
@@ -129,12 +143,12 @@ IMDBot.prototype.broadcastTrivia = function () {
 };
 
 IMDBot.prototype.postToChannel = function (imdbData) {
-  this.bot.log(`Posting IMDB information to #${process.env.BROADCAST_CHANNEL} for ${imdbData.title}`);
+  this.bot.log(`Posting IMDB information to #${process.env.BROADCAST_CHANNEL} for ${imdbData.Title}`);
 
   const messages = [
-    imdbData.poster,
+    imdbData.Poster,
     imdbData.header,
-    ...this.splitMessage(imdbData.plot),
+    ...this.splitMessage(imdbData.Plot),
     'Additional commands available in this channel: !trivia',
   ];
 
@@ -143,9 +157,9 @@ IMDBot.prototype.postToChannel = function (imdbData) {
 
 IMDBot.prototype.whisperImdb = function (user) {
   const messages = [
-    this.state.imdb.poster,
+    this.state.imdb.Poster,
     this.state.imdb.header || 'IMDB information currently unavailable.',
-    ...this.splitMessage(this.state.imdb.plot),
+    ...this.splitMessage(this.state.imdb.Plot),
   ];
 
   this.sendMessages(messages, user.username);

@@ -3,5 +3,6 @@
     "The Trees Network",
     "Off the Air"
   ],
-  "minimumDuration": 1200
+  "minimumDuration": 1200,
+  "seriesDuration": 3600
 }
