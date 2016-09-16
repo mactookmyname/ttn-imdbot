@@ -1,15 +1,13 @@
-var Bot = require('../index');
-var EventEmitter = require('events').EventEmitter;
-var util = require('util');
-var imdb = require('imdb-api');
-var imgur = require('imgur');
+const Bot = require('../index');
+const EventEmitter = require('events').EventEmitter;
+const util = require('util');
+const imdb = require('imdb-api');
+const imgur = require('imgur');
 const _ = require('lodash');
-
-module.exports = IMDBot;
 
 /**
  * IMDBot
- * Automatically outputs IMDB information to config broadcastChannel
+ * Automatically outputs IMDB information to config broadcast channel
  *
  * Available commands in chat:
  *   !imdb - whispers poster, title, year, rating, plot
@@ -18,13 +16,13 @@ function IMDBot(options) {
   this.options = options;
   this.bot = new Bot({
     username: process.env.BOT_USERNAME,
-    password: process.env.BOT_PASSWORD
+    password: process.env.BOT_PASSWORD,
   });
   this.onMessage = this.onMessage.bind(this);
   this.onSocket = this.onSocket.bind(this);
   this.getImdb = this.getImdb.bind(this);
   this.initialize();
-};
+}
 
 util.inherits(IMDBot, EventEmitter);
 
@@ -37,7 +35,7 @@ IMDBot.prototype.resetState = function () {
   this.state = {
     imdb: false,
   };
-}
+};
 
 IMDBot.prototype.listenForEvents = function () {
   /**
@@ -59,7 +57,7 @@ IMDBot.prototype.onSocket = function (data) {
   this.getImdb(data.video);
 };
 
-IMDBot.prototype.getImdb = function(data) {
+IMDBot.prototype.getImdb = function (data) {
   this.resetState();
 
   // The only reliable way to skip bumps
@@ -72,102 +70,95 @@ IMDBot.prototype.getImdb = function(data) {
     return this.bot.log(`Skipping IMDB check due to not meeting minimum duration. Actual: ${data.duration}, Minimum: ${this.options.minimumDuration}`);
   }
 
-  imdb.getReq({ name: data.name }, (err, imdb) => {
+  // Removes trailing year names on title which causes api lookup to fail
+  const name = this.stripYear(data.name);
+
+  return imdb.getReq({ name }, (err, imdbData) => {
     if (err) {
-      return this.bot.log(`Error fetching IMDB data for ${data.name}.`, err);
+      return this.bot.log(`Error fetching IMDB data for ${name}.`, err);
     }
 
-    this.state.imdb = imdb;
-    this.state.imdb.header = `Now Playing: ${imdb.title} (${imdb._year_data}) - ${imdb.rating}/10 - ${imdb.imdburl}`;
+    this.state.imdb = imdbData;
 
-    imgur.uploadUrl(imdb.poster).then(json => {
+    // eslint-disable-next-line
+    this.state.imdb.header = `Now Playing: ${imdbData.title} (${imdbData._year_data}) - ${imdbData.rating}/10 - ${imdbData.imdburl}`;
+
+    return imgur.uploadUrl(imdbData.poster).then((json) => {
       this.state.imdb.poster = json.data.link;
       this.postToChannel(this.state.imdb);
-    }).catch(err => {
-      this.bot.error('Error uploading to imgur', err.message);
+    }).catch((imgurError) => {
+      this.bot.error('Error uploading to imgur', imgurError.message);
     });
   });
 };
 
 IMDBot.prototype.onMessage = function (data) {
   if (typeof data.message === 'string') {
-    var message = data.message.trim().toLowerCase();
+    const message = data.message.trim().toLowerCase();
 
-    if (message.match(/^!imdb/i)) {
+    if (message.match(/^!testimdb/i)) {
       this.whisperImdb(data.user);
     }
   }
 };
 
-IMDBot.prototype.postToChannel = function(imdb) {
-  this.bot.log(`Posting IMDB information to #imdb for ${imdb.title}`);
+IMDBot.prototype.postToChannel = function (imdbData) {
+  this.bot.log(`Posting IMDB information to #${process.env.BROADCAST_CHANNEL} for ${imdbData.title}`);
 
   const messages = [
-    imdb.poster,
-    imdb.header,
-    ...this.splitMessage(imdb.plot),
+    imdbData.poster,
+    imdbData.header,
+    ...this.splitMessage(imdbData.plot),
   ];
 
-  var i = 0;
+  this.sendMessages(messages);
+};
 
-  // slight delay iterating messages to ensure correct delivery order
-  var sendMessage = () => {
-    this.bot.call('chat.post', {
-      message: `#${this.options.broadcastChannel} ${messages[i]}`,
-    });
+IMDBot.prototype.whisperImdb = function (user) {
+  const messages = [
+    this.state.imdb.poster,
+    this.state.imdb.header || 'IMDB information currently unavailable.',
+    ...this.splitMessage(this.state.imdb.plot),
+  ];
 
-    i++;
+  this.sendMessages(messages, user.username);
+};
 
-    if (i < messages.length) {
-      setTimeout(function() { sendMessage(); }, 100);
+IMDBot.prototype.sendMessages = function (messages, target) {
+  const msgDelay = 50;
+
+  const sendMessage = (message) => {
+    if (target) {
+      this.bot.call('chat.whisper', {
+        target,
+        message,
+      });
+    } else {
+      this.bot.call('chat.post', {
+        message: `#${process.env.BROADCAST_CHANNEL} ${message}`,
+      });
     }
   };
 
-  sendMessage();
-};
-
-IMDBot.prototype.whisperImdb = function(user) {
-  const target = user.username;
-  const imdb = this.state.imdb;
-  const msg = imdb
-    ? imdb.header
-    : 'IMDB information currently unavailable.';
-
-  const messages = [
-    imdb.poster,
-    msg,
-    ...this.splitMessage(imdb.plot),
-  ];
-
-  var i = 0;
-
-  // slight delay iterating messages to ensure correct delivery order
-  var sendMessage = function() {
-    this.bot.call('chat.whisper', {
-      target,
-      message: messages[i],
-    });
-
-    i++;
-
-    if (i < messages.length) {
-      setTimeout(function() { sendMessage(); }, 100);
-    }
-  }.bind(this);
-
-  sendMessage();
+  _.forEach(messages, (v, i) => _.delay(sendMessage, i * msgDelay, v));
 };
 
 // Trees only supports messages less than 250 characters so we split long descriptions
-IMDBot.prototype.splitMessage = function(message) {
+IMDBot.prototype.splitMessage = function (message) {
   if (!message) {
     return [];
   }
-  var re = /.{1,240}(?!\S)/g; // This regex grabs whole words up to 240 chars
-  var messages = [];
-  var result;
-  while ((result = re.exec(message)) !== null) {
+  const re = /.{1,240}(?!\S)/g; // This regex grabs whole words up to 240 chars
+  const messages = [];
+  var result; // eslint-disable-line no-var, vars-on-top
+  while ((result = re.exec(message)) !== null) { // eslint-disable-line
     messages.push(result[0]);
   }
   return messages;
 };
+
+IMDBot.prototype.stripYear = function (name) {
+  return name.replace(/\s\(\d{4}\)/, '');
+};
+
+module.exports = IMDBot;

@@ -12,7 +12,11 @@
     "request": "~2.40.0",
     "ws": "~0.4.32"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^3.5.0",
+    "eslint-config-airbnb-base": "^7.1.0",
+    "eslint-plugin-import": "^1.15.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/mactookmyname/ttn-imdbot.git"
