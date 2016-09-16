@@ -96,7 +96,7 @@ IMDBot.prototype.onMessage = function (data) {
   if (typeof data.message === 'string') {
     const message = data.message.trim().toLowerCase();
 
-    if (message.match(/^!testimdb/i)) {
+    if (message.match(/^!imdb/i)) {
       this.whisperImdb(data.user);
     }
   }
