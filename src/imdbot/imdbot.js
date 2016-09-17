@@ -34,12 +34,18 @@ IMDBot.prototype.initialize = function () {
 };
 
 IMDBot.prototype.resetState = function () {
+  if (_.has(this, 'state.triviaTimer')) {
+    clearInterval(this.state.triviaTimer);
+  }
+
   this.state = {
     imdb: false,
     commands: [],
     parentalGuide: {},
     trivia: [],
     triviaIndex: 0,
+    triviaLastSent: new Date(),
+    triviaTimer: null,
   };
 };
 
@@ -105,19 +111,25 @@ IMDBot.prototype.getImdb = function (data) {
     this.state.imdb.header = `:movie_camera: Now Playing: ${imdbData.Title} (${imdbData.Year}) - ${rating}${imdburl}`;
 
     getTrivia(`${imdburl}/trivia`, (triviaError, triviaData) => {
-      if (triviaError) {
+      if (triviaError || !triviaData.length) {
         return this.bot.log(`Unable to get trivia for ${name}`, triviaError);
       }
 
       this.state.trivia = _.shuffle(triviaData);
       this.state.commands.push(`!trivia (${this.state.trivia.length} available)`);
+      this.state.triviaTimer = setInterval(() => {
+        if (new Date() - this.state.triviaLastSent > this.options.triviaAutoDuration) {
+          this.bot.log(`Auto sending trivia due to inactivity, last trivia sent @ ${this.state.triviaLastSent.toISOString()}`);
+          this.broadcastTrivia();
+        }
+      }, this.options.triviaAutoInterval);
 
       return this.bot.log(`${triviaData.length} pieces of trivia fetched for ${name} (${imdbData.Year}).`);
     });
 
     // eslint-disable-next-line
     getParentalGuide(`${imdburl}/parentalguide`, (parentalError, parentalData) => {
-      if (parentalError) {
+      if (parentalError || !parentalData) {
         return this.bot.log(`Unable to get parental guide for ${name}`, parentalError);
       }
 
@@ -166,6 +178,9 @@ IMDBot.prototype.broadcastParental = function (user) {
 };
 
 IMDBot.prototype.broadcastTrivia = function (user) {
+  // Reset our last sent date so our auto trivia gets extended
+  this.state.triviaLastSent = new Date();
+
   const i = this.state.triviaIndex;
   const title = this.state.imdb.Title;
   const trivia = this.state.trivia[i];
@@ -202,7 +217,7 @@ IMDBot.prototype.whisperImdb = function (user) {
 };
 
 IMDBot.prototype.sendMessages = function (messages, target) {
-  const msgDelay = 250;
+  const msgDelay = 100;
 
   const sendMessage = (message) => {
     if (message) {

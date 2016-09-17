@@ -4,5 +4,7 @@
     "Off the Air"
   ],
   "minimumDuration": 1200,
-  "seriesDuration": 3600
+  "seriesDuration": 3600,
+  "triviaAutoDuration": 900000,
+  "triviaAutoInterval": 30000
 }
