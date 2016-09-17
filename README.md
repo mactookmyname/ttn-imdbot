@@ -10,3 +10,4 @@ Main Bot code lifted from [treesnetwork-bot](https://github.com/simonify/treesne
 * Handle titles with multiple imdb results (current [imdb-api](https://github.com/worr/node-imdb-api) only returns a single response)
 * Convert to use https://github.com/treesnetwork/bot as base
 * Add support for writer, actor, directors, etc
+* Send trivia after 15 minutes since last trivia

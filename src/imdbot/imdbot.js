@@ -5,6 +5,7 @@ const imgur = require('imgur');
 const request = require('request');
 const _ = require('lodash');
 const getTrivia = require('./trivia');
+const getParentalGuide = require('./parental');
 
 /**
  * IMDBot
@@ -35,6 +36,7 @@ IMDBot.prototype.initialize = function () {
 IMDBot.prototype.resetState = function () {
   this.state = {
     imdb: false,
+    parentalGuide: {},
     trivia: [],
     triviaIndex: 0,
   };
@@ -110,6 +112,15 @@ IMDBot.prototype.getImdb = function (data) {
       return this.bot.log(`${triviaData.length} pieces of trivia fetched for ${name} (${imdbData.Year}).`);
     });
 
+    // eslint-disable-next-line
+    getParentalGuide(`${imdburl}/parentalguide`, (parentalError, parentalData) => {
+      if (parentalError) {
+        return this.bot.log(`Unable to get parental guide for ${name}`, parentalError);
+      }
+
+      this.state.parentalGuide = parentalData;
+    });
+
     return imgur.uploadUrl(imdbData.Poster).then((json) => {
       this.state.imdb.Poster = json.data.link;
       this.postToChannel(this.state.imdb);
@@ -124,14 +135,23 @@ IMDBot.prototype.onMessage = function (data) {
     const message = data.message.trim().toLowerCase();
 
     const triviaRegEx = new RegExp(`^(#${process.env.BROADCAST_CHANNEL} !trivia)|(!trivia #${process.env.BROADCAST_CHANNEL})`, 'i');
+    const parentalRegEx = new RegExp(`^(#${process.env.BROADCAST_CHANNEL} !drugs)|(!drugs #${process.env.BROADCAST_CHANNEL})`, 'i');
 
     if (message.match(/^!imdb/i)) {
       this.whisperImdb(data.user);
     } else if (message.match(triviaRegEx)) {
       this.bot.log(`Sending trivia to room at request of ${data.user.username}`);
       this.broadcastTrivia();
+    } else if (message.match(parentalRegEx)) {
+      this.bot.log(`Sending drug trivia to room at request of ${data.user.username}`);
+      this.broadcastParental();
     }
   }
+};
+
+IMDBot.prototype.broadcastParental = function () {
+  const message = `:weed: Drug & Alcohol Usage - Rating: ${this.state.parentalGuide.rating} - ${this.state.parentalGuide.summary}`;
+  this.sendMessages(this.splitMessage(message));
 };
 
 IMDBot.prototype.broadcastTrivia = function () {
@@ -139,14 +159,18 @@ IMDBot.prototype.broadcastTrivia = function () {
   const title = this.state.imdb.Title;
   const trivia = this.state.trivia[i];
 
-  this.sendMessages(this.splitMessage(`${title} Trivia ${i + 1} out of ${this.state.trivia.length}: ${trivia}`));
+  this.sendMessages(this.splitMessage(`:tada: ${title} Trivia ${i + 1} out of ${this.state.trivia.length}: ${trivia}`));
   this.state.triviaIndex = i === (this.state.trivia.length - 1) ? 0 : i + 1;
 };
 
 IMDBot.prototype.postToChannel = function (imdbData) {
   this.bot.log(`Posting IMDB information to #${process.env.BROADCAST_CHANNEL} for ${imdbData.Title}`);
 
-  const commands = this.state.trivia ? `Additional commands available in this channel: !trivia (${this.state.trivia.length} available)` : '';
+  const additionalCommands = _.compact([
+    this.state.trivia && `!trivia (${this.state.trivia.length} available)`,
+    this.state.parentalGuide && '!drugs',
+  ]);
+  const commands = additionalCommands.length && `Additional commands available in this channel: ${additionalCommands.join(' | ')}`;
 
   const messages = [
     imdbData.Poster,
