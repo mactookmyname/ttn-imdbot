@@ -36,6 +36,7 @@ IMDBot.prototype.initialize = function () {
 IMDBot.prototype.resetState = function () {
   this.state = {
     imdb: false,
+    commands: [],
     parentalGuide: {},
     trivia: [],
     triviaIndex: 0,
@@ -109,6 +110,8 @@ IMDBot.prototype.getImdb = function (data) {
       }
 
       this.state.trivia = _.shuffle(triviaData);
+      this.state.commands.push(`!trivia (${this.state.trivia.length} available)`);
+
       return this.bot.log(`${triviaData.length} pieces of trivia fetched for ${name} (${imdbData.Year}).`);
     });
 
@@ -119,6 +122,7 @@ IMDBot.prototype.getImdb = function (data) {
       }
 
       this.state.parentalGuide = parentalData;
+      this.state.commands.push('!drugs');
     });
 
     return imgur.uploadUrl(imdbData.Poster).then((json) => {
@@ -166,11 +170,7 @@ IMDBot.prototype.broadcastTrivia = function () {
 IMDBot.prototype.postToChannel = function (imdbData) {
   this.bot.log(`Posting IMDB information to #${process.env.BROADCAST_CHANNEL} for ${imdbData.Title}`);
 
-  const additionalCommands = _.compact([
-    this.state.trivia && `!trivia (${this.state.trivia.length} available)`,
-    this.state.parentalGuide && '!drugs',
-  ]);
-  const commands = additionalCommands.length && `Additional commands available in this channel: ${additionalCommands.join(' | ')}`;
+  const commands = this.state.commands.length && `:point_right: Additional commands available in this channel: ${this.state.commands.join(' | ')}`;
 
   const messages = [
     imdbData.Poster,
