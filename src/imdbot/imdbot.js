@@ -85,7 +85,7 @@ IMDBot.prototype.getImdb = function (data) {
     qs: {
       type,
       t: name,
-      plot: 'full',
+      plot: 'short',
       r: 'json',
     },
   };
