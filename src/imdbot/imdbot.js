@@ -53,7 +53,7 @@ IMDBot.prototype.listenForEvents = function () {
 
 IMDBot.prototype.onSocket = function (data) {
   if (!data.video) {
-    this.bootstrap.log('Unable to fetch video from Data:', data);
+    this.bot.log('Unable to fetch video from Data:', data);
     return;
   }
 
@@ -98,7 +98,8 @@ IMDBot.prototype.getImdb = function (data) {
     this.state.imdb = imdbData;
     const imdburl = `http://www.imdb.com/title/${imdbData.imdbID}`;
 
-    this.state.imdb.header = `Now Playing: ${imdbData.Title} (${imdbData.Year}) - ${imdbData.rating}/10 - ${imdburl}`;
+    const rating = imdbData.rating ? `${imdbData.rating}/10 - ` : '';
+    this.state.imdb.header = `:movie_camera: Now Playing: ${imdbData.Title} (${imdbData.Year}) - ${rating}${imdburl}`;
 
     getTrivia(`${imdburl}/trivia`, (triviaError, triviaData) => {
       if (triviaError) {
@@ -106,7 +107,7 @@ IMDBot.prototype.getImdb = function (data) {
       }
 
       this.state.trivia = _.shuffle(triviaData);
-      return this.bot.log(`${triviaData.length} pieces of trivia fetched for ${name}.`);
+      return this.bot.log(`${triviaData.length} pieces of trivia fetched for ${name} (${imdbData.Year}).`);
     });
 
     return imgur.uploadUrl(imdbData.Poster).then((json) => {
@@ -145,11 +146,13 @@ IMDBot.prototype.broadcastTrivia = function () {
 IMDBot.prototype.postToChannel = function (imdbData) {
   this.bot.log(`Posting IMDB information to #${process.env.BROADCAST_CHANNEL} for ${imdbData.Title}`);
 
+  const commands = this.state.trivia ? `Additional commands available in this channel: !trivia (${this.state.trivia.length} available)` : '';
+
   const messages = [
     imdbData.Poster,
     imdbData.header,
     ...this.splitMessage(imdbData.Plot),
-    'Additional commands available in this channel: !trivia',
+    commands,
   ];
 
   this.sendMessages(messages);
@@ -169,15 +172,17 @@ IMDBot.prototype.sendMessages = function (messages, target) {
   const msgDelay = 50;
 
   const sendMessage = (message) => {
-    if (target) {
-      this.bot.call('chat.whisper', {
-        target,
-        message,
-      });
-    } else {
-      this.bot.call('chat.post', {
-        message: `#${process.env.BROADCAST_CHANNEL} ${message}`,
-      });
+    if (message) {
+      if (target) {
+        this.bot.call('chat.whisper', {
+          target,
+          message,
+        });
+      } else {
+        this.bot.call('chat.post', {
+          message: `#${process.env.BROADCAST_CHANNEL} ${message}`,
+        });
+      }
     }
   };
 
