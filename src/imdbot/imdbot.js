@@ -169,7 +169,7 @@ IMDBot.prototype.whisperImdb = function (user) {
 };
 
 IMDBot.prototype.sendMessages = function (messages, target) {
-  const msgDelay = 50;
+  const msgDelay = 250;
 
   const sendMessage = (message) => {
     if (message) {
