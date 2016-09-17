@@ -141,11 +141,17 @@ IMDBot.prototype.onMessage = function (data) {
     const triviaRegEx = new RegExp(`^(#${process.env.BROADCAST_CHANNEL} !trivia)|(!trivia #${process.env.BROADCAST_CHANNEL})`, 'i');
     const parentalRegEx = new RegExp(`^(#${process.env.BROADCAST_CHANNEL} !drugs)|(!drugs #${process.env.BROADCAST_CHANNEL})`, 'i');
 
-    if (message.match(/^!imdb/i)) {
+    if (message.match(/^!imdb$/i)) {
       this.whisperImdb(data.user);
+    } else if (message.match(/^!trivia$/i)) {
+      this.bot.log(`Sending trivia to room at request of ${data.user.username}`);
+      this.broadcastTrivia(data.user);
     } else if (message.match(triviaRegEx)) {
       this.bot.log(`Sending trivia to room at request of ${data.user.username}`);
       this.broadcastTrivia();
+    } else if (message.match(/^!drugs$/i)) {
+      this.bot.log(`Sending drug trivia to room at request of ${data.user.username}`);
+      this.broadcastParental(data.user);
     } else if (message.match(parentalRegEx)) {
       this.bot.log(`Sending drug trivia to room at request of ${data.user.username}`);
       this.broadcastParental();
@@ -153,17 +159,20 @@ IMDBot.prototype.onMessage = function (data) {
   }
 };
 
-IMDBot.prototype.broadcastParental = function () {
-  const message = `:weed: Drug & Alcohol Usage - Rating: ${this.state.parentalGuide.rating} - ${this.state.parentalGuide.summary}`;
+IMDBot.prototype.broadcastParental = function (user) {
+  const u = user ? `@${user.username} ` : '';
+  const message = `:weed: ${u}Drug & Alcohol Usage - Rating: ${this.state.parentalGuide.rating} - ${this.state.parentalGuide.summary}`;
   this.sendMessages(this.splitMessage(message));
 };
 
-IMDBot.prototype.broadcastTrivia = function () {
+IMDBot.prototype.broadcastTrivia = function (user) {
   const i = this.state.triviaIndex;
   const title = this.state.imdb.Title;
   const trivia = this.state.trivia[i];
 
-  this.sendMessages(this.splitMessage(`:tada: ${title} Trivia ${i + 1} out of ${this.state.trivia.length}: ${trivia}`));
+  const u = user ? `@${user.username} ` : '';
+  const message = `:tada: ${u}${title} Trivia ${i + 1} out of ${this.state.trivia.length}: ${trivia}`;
+  this.sendMessages(this.splitMessage(message));
   this.state.triviaIndex = i === (this.state.trivia.length - 1) ? 0 : i + 1;
 };
 
