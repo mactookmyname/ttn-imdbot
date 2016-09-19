@@ -141,7 +141,9 @@ IMDBot.prototype.getImdb = function (data) {
       this.state.imdb.Poster = json.data.link;
       this.postToChannel(this.state.imdb);
     }).catch((imgurError) => {
-      this.bot.error('Error uploading to imgur', imgurError.message);
+      this.bot.log('Error uploading to imgur, posting info w/out image', imgurError.message);
+      this.state.imdb.Poster = '';
+      this.postToChannel(this.state.imdb);
     });
   });
 };
@@ -217,7 +219,7 @@ IMDBot.prototype.whisperImdb = function (user) {
 };
 
 IMDBot.prototype.sendMessages = function (messages, target) {
-  const msgDelay = 100;
+  const msgDelay = 200;
 
   const sendMessage = (message) => {
     if (message) {
