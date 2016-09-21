@@ -1,1 +1,1 @@
-bot: node src/imdbot/index.js
+bot: babel-node index

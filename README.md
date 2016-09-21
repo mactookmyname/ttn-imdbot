@@ -8,5 +8,7 @@ Main Bot code lifted from [treesnetwork-bot](https://github.com/simonify/treesne
 
 ## TODO
 * Handle titles with multiple imdb results e.g. _Halloween_
-* Convert to use https://github.com/treesnetwork/bot as base
 * Add support for writer, actor, directors, etc
+* If we don't find a description with one search (movie, series) try the other, e.g. _American Ninja Warrior_
+* Feature, !cops - Last time COPS was played
+* Drugs command outputs undefined when nothing found, should prob be an error, didn't get data for _Signs_, _Shallow Hal_

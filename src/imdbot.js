@@ -1,0 +1,131 @@
+import createBot, {
+  MESSAGES_ADD,
+  SOCKET_READY,
+  VIDEO_SET,
+  WHISPERS_RECEIVE,
+  withAuth,
+} from '@ttn/bot';
+import imgur from 'imgur';
+import _ from 'lodash';
+
+import handlers from './handlers/handlers';
+import options from './config.json';
+import getOmdb from './data/omdb';
+import { getTrivia, getParentalGuide } from './data/imdb';
+
+/**
+ * IMDBot
+ * Automatically outputs IMDB information to config broadcast channel
+ */
+export default function getImdbot() {
+  const initialState = {
+    imdb: false,
+    imdbImage: '',
+    commands: [],
+    parentalGuide: {},
+    trivia: [],
+    triviaIndex: 0,
+    triviaLastSent: new Date(),
+    triviaTimer: null,
+  };
+
+  let state = { ...initialState };
+
+  const resetState = () => {
+    if (_.has(state, 'triviaTimer')) {
+      clearInterval(state.triviaTimer);
+    }
+
+    state = { ...initialState };
+  };
+
+  const setState = (newState) => {
+    state = {
+      ...state,
+      ...newState,
+    };
+  };
+
+  const bot = withAuth(createBot)();
+
+  const startTriviaTimeout = () => (
+    setInterval(() => {
+      if (new Date() - state.triviaLastSent > options.triviaAutoDuration) {
+        bot.debug(`Auto sending trivia due to inactivity, last trivia sent @ ${state.triviaLastSent.toISOString()}`);
+        // this.broadcastTrivia();
+        // TODO BROADCAST TRIVIA
+      }
+    }, options.triviaAutoInterval)
+  );
+
+  const getImdb = async (video) => {
+    resetState();
+
+    // The only reliable way to skip bumps
+    if (_.includes(options.blacklist, video.name)) {
+      return bot.debug(`Skipping IMDB check for: ${video.name}`);
+    }
+
+    // It's unlikely we will find a record on IMDB for a video too short
+    if (video.duration < options.minimumDuration) {
+      return bot.debug(`Skipping IMDB check due to not meeting minimum duration. Actual: ${video.duration}, Minimum: ${options.minimumDuration}`);
+    }
+
+    try {
+      const imdb = await getOmdb(video);
+      const trivia = _.shuffle(await getTrivia(imdb.imdbID));
+      const triviaTimer = startTriviaTimeout();
+      const parentalGuide = await getParentalGuide(imdb.imdbID);
+
+      // need this extra catch to prevent falling into async try/catch block on imgur error
+      const imdbImage = await imgur.uploadUrl(imdb.Poster).catch(() => '');
+
+      setState({
+        imdb,
+        imdbImage,
+        trivia,
+        triviaTimer,
+        parentalGuide,
+        commands: [
+          trivia.length && `!trivia (${trivia.length} available)`,
+          parentalGuide && '!drugs',
+          ...state.commands,
+        ],
+      });
+
+      bot.debug(`IMDB data fetched for ${video.name}: ${trivia.length} pieces of trivia fetched.`);
+    } catch (e) {
+      return bot.debug(`Error fetching IMDB data for ${video.name}.`, e);
+    }
+    return true;
+  };
+
+  const onMessage = ({ message, user }) => {
+    handlers.forEach((h) => {
+      const regex = new RegExp(`^(?:@${process.env.BOT_USERNAME} )?(?:#${process.env.BROADCAST_CHANNEL} )?${h.match}$`, 'i');
+      return message.match(regex) && h.handler.call(null, bot, state, user);
+    });
+  };
+
+  const onSocket = (data) => getImdb(_.get(data, 'video'));
+
+  const start = ({ username, password }) => {
+    bot.debug('Starting up imdbot...');
+
+    bot.start()
+      .then(() => bot.authenticate(username, password))
+      .catch((err) => {
+        bot.debug('Unable to start up imdbot.', err);
+        bot.stop();
+      });
+  };
+
+  bot.subscribe(MESSAGES_ADD, onMessage);
+  bot.subscribe(WHISPERS_RECEIVE, onMessage);
+  bot.subscribe(SOCKET_READY, onSocket);
+  bot.subscribe(VIDEO_SET, getImdb);
+
+  return {
+    start,
+  };
+}

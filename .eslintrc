@@ -1,9 +1,14 @@
 {
+  "parser": "babel-eslint",
   "extends": "airbnb-base",
   "env": {
     "node": true
   },
+  "plugins": [
+    "babel"
+  ],
   "rules": {
-    "func-names": "off"
+    "arrow-parens": 0,
+    "babel/arrow-parens": 2,
   }
 }
