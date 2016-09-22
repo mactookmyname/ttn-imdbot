@@ -1,8 +1,16 @@
 import request from 'request-promise';
+import _ from 'lodash';
+
 import { SERIES_DURATION } from '../config';
 import stripYear from '../utils/stripYear';
 
-export default (video) => {
+/**
+ * Attemps to get imdb info based on the following logic:
+ * 1. exact title match yields one result
+ * 2. exact type (series, movie) yields one result
+ * 3. whichever title has the nearest duration to the ttn metadata
+ **/
+const getOmdb = async (video) => {
   // Removes trailing year names on title which causes api lookup to fail
   const name = stripYear(video.name);
 
@@ -12,13 +20,43 @@ export default (video) => {
   const omdbOptions = {
     uri: 'http://www.omdbapi.com/?',
     json: true,
+  };
+
+  const omdbSearch = {
+    ...omdbOptions,
     qs: {
-      type,
-      t: name,
-      plot: 'short',
-      r: 'json',
+      s: name,
     },
   };
 
-  return request(omdbOptions);
+  const getById = ({ imdbID }) => request({ ...omdbOptions, qs: { i: imdbID } });
+  const matchTitle = (results) => _.filter(results.Search, { Title: name });
+  const durationDiff = (runtime) => Math.abs((parseInt(runtime, 10) * 60) - video.duration);
+
+  // search for all titles
+  try {
+    const searchResults = await request(omdbSearch);
+    if (searchResults.Error) {
+      return {};
+    }
+
+    const exactTitles = matchTitle(searchResults);
+    if (exactTitles.length === 1) {
+      return getById(_.head(exactTitles));
+    }
+
+    const exactTypes = _.filter(exactTitles, { Type: type });
+    if (exactTypes.length === 1) {
+      return getById(_.head(exactTypes));
+    }
+
+    const allMatches = await Promise.all(_.map(exactTypes, getById));
+    return _.reduce(allMatches, (acc, val) => (
+      durationDiff(acc.Runtime) < durationDiff(val.Runtime) ? acc : val
+    ));
+  } catch (e) {
+    return {};
+  }
 };
+
+export default getOmdb;
