@@ -1,6 +1,6 @@
 import broadcastDrugs from './broadcastDrugs';
 import broadcastTrivia from './broadcastTrivia';
-import whisperImdb from './whisperImdb';
+import whisperImdb from './sendImdb';
 
 export default [
   { match: '!testimdb', handler: whisperImdb },

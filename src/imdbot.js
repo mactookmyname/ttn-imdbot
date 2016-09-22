@@ -9,9 +9,15 @@ import imgur from 'imgur';
 import _ from 'lodash';
 
 import handlers from './handlers/handlers';
-import options from './config.json';
+import {
+  BLACKLIST,
+  MINIMUM_DURATION,
+  TRIVIA_AUTO_DURATION,
+  TRIVIA_AUTO_INTERVAL,
+} from './config';
 import getOmdb from './data/omdb';
 import { getTrivia, getParentalGuide } from './data/imdb';
+import { postToChannel } from './handlers/sendImdb';
 
 /**
  * IMDBot
@@ -50,25 +56,25 @@ export default function getImdbot() {
 
   const startTriviaTimeout = () => (
     setInterval(() => {
-      if (new Date() - state.triviaLastSent > options.triviaAutoDuration) {
+      if (new Date() - state.triviaLastSent > TRIVIA_AUTO_DURATION) {
         bot.debug(`Auto sending trivia due to inactivity, last trivia sent @ ${state.triviaLastSent.toISOString()}`);
         // this.broadcastTrivia();
         // TODO BROADCAST TRIVIA
       }
-    }, options.triviaAutoInterval)
+    }, TRIVIA_AUTO_INTERVAL)
   );
 
   const getImdb = async (video) => {
     resetState();
 
     // The only reliable way to skip bumps
-    if (_.includes(options.blacklist, video.name)) {
+    if (_.includes(BLACKLIST, video.name)) {
       return bot.debug(`Skipping IMDB check for: ${video.name}`);
     }
 
     // It's unlikely we will find a record on IMDB for a video too short
-    if (video.duration < options.minimumDuration) {
-      return bot.debug(`Skipping IMDB check due to not meeting minimum duration. Actual: ${video.duration}, Minimum: ${options.minimumDuration}`);
+    if (video.duration < MINIMUM_DURATION) {
+      return bot.debug(`Skipping IMDB check due to not meeting minimum duration. Actual: ${video.duration}, Minimum: ${MINIMUM_DURATION}`);
     }
 
     try {
@@ -94,10 +100,10 @@ export default function getImdbot() {
       });
 
       bot.debug(`IMDB data fetched for ${video.name}: ${trivia.length} pieces of trivia fetched.`);
+      return postToChannel(bot, state);
     } catch (e) {
       return bot.debug(`Error fetching IMDB data for ${video.name}.`, e);
     }
-    return true;
   };
 
   const onMessage = ({ message, user }) => {

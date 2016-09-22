@@ -1,5 +1,5 @@
 import request from 'request-promise';
-import options from '../config.json';
+import { SERIES_DURATION } from '../config';
 import stripYear from '../utils/stripYear';
 
 export default (video) => {
@@ -7,7 +7,7 @@ export default (video) => {
   const name = stripYear(video.name);
 
   // Searches specifically for series instead of movie for shorter durations
-  const type = video.duration < options.seriesDuration ? 'series' : 'movie';
+  const type = video.duration < SERIES_DURATION ? 'series' : 'movie';
 
   const omdbOptions = {
     uri: 'http://www.omdbapi.com/?',
