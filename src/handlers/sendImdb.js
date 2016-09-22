@@ -1,5 +1,6 @@
 import sendMessages from '../utils/sendMessages';
 import splitMessages from '../utils/splitMessages';
+import _ from 'lodash';
 
 const getHeader = (imdb) => {
   if (!imdb) {
@@ -20,7 +21,7 @@ const getMessages = ({ imdb, imdbImage }) => ([
 export const postToChannel = (bot, state) => {
   sendMessages(bot, [
     ...getMessages(state),
-    state.commands.length && `:point_right: Additional commands available in this channel: ${state.commands.join(' | ')}`,
+    state.commands.length && `:point_right: Additional commands available in this channel: ${_.compact(state.commands).join(' | ')}`,
   ]);
 };
 

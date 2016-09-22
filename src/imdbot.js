@@ -94,6 +94,9 @@ export default function getImdbot() {
         commands: [
           trivia.length && `!trivia (${trivia.length} available)`,
           parentalGuide && '!drugs',
+          imdb.Actors !== 'N/A' && '!actors',
+          imdb.Director !== 'N/A' && '!director',
+          imdb.Writer !== 'N/A' && '!writer',
           ...state.commands,
         ],
       });
