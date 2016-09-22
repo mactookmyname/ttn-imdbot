@@ -1,7 +1,6 @@
 import createBot, {
   MESSAGES_ADD,
   SOCKET_READY,
-  VIDEO_SET,
   WHISPERS_RECEIVE,
   withAuth,
 } from '@ttn/bot';
@@ -129,7 +128,7 @@ export default function getImdbot() {
   bot.subscribe(MESSAGES_ADD, onMessage);
   bot.subscribe(WHISPERS_RECEIVE, onMessage);
   bot.subscribe(SOCKET_READY, onSocket);
-  bot.subscribe(VIDEO_SET, getImdb);
+  bot.subscribe('video:play', getImdb);
 
   return {
     start,
