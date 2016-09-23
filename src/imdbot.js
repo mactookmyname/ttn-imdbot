@@ -8,6 +8,7 @@ import imgur from 'imgur';
 import _ from 'lodash';
 
 import handlers from './handlers/handlers';
+import broadcastTrivia from './handlers/broadcastTrivia';
 import {
   BLACKLIST,
   MINIMUM_DURATION,
@@ -57,8 +58,7 @@ export default function getImdbot() {
     setInterval(() => {
       if (new Date() - state.triviaLastSent > TRIVIA_AUTO_DURATION) {
         bot.debug(`Auto sending trivia due to inactivity, last trivia sent @ ${state.triviaLastSent.toISOString()}`);
-        // this.broadcastTrivia();
-        // TODO BROADCAST TRIVIA
+        broadcastTrivia(bot, state);
       }
     }, TRIVIA_AUTO_INTERVAL)
   );
