@@ -7,6 +7,7 @@ export default (bot, { parentalGuide }, { username }) => {
   }
 
   const u = username ? `@${username} ` : '';
-  const msg = `:weed: ${u}Drug & Alcohol Usage - Rating: ${parentalGuide.rating} - ${parentalGuide.summary}`;
+  const rating = parentalGuide.rating ? `Rating: ${parentalGuide.rating} - ` : '';
+  const msg = `:weed: ${u}Drug & Alcohol Usage - ${rating}${parentalGuide.summary}`;
   return sendMessages(bot, splitMessages(msg));
 };
