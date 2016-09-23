@@ -30,33 +30,33 @@ const getOmdb = async (video) => {
   };
 
   const getById = ({ imdbID }) => request({ ...omdbOptions, qs: { i: imdbID } });
-  const matchTitle = (results) => _.filter(results.Search, { Title: name });
+  const matchTitle = (results) => (
+    _.filter(results.Search, (r) => _.eq(_.toLower(r.Title), _.toLower(name)))
+  );
   const durationDiff = (runtime) => Math.abs((parseInt(runtime, 10) * 60) - video.duration);
 
   // search for all titles
-  try {
-    const searchResults = await request(omdbSearch);
-    if (searchResults.Error) {
-      return {};
-    }
-
-    const exactTitles = matchTitle(searchResults);
-    if (exactTitles.length === 1) {
-      return getById(_.head(exactTitles));
-    }
-
-    const exactTypes = _.filter(exactTitles, { Type: type });
-    if (exactTypes.length === 1) {
-      return getById(_.head(exactTypes));
-    }
-
-    const allMatches = await Promise.all(_.map(exactTypes, getById));
-    return _.reduce(allMatches, (acc, val) => (
-      durationDiff(acc.Runtime) < durationDiff(val.Runtime) ? acc : val
-    ));
-  } catch (e) {
-    return {};
+  const searchResults = await request(omdbSearch);
+  if (searchResults.Error) {
+    throw new Error('Error from OMDB endpoint');
   }
+
+  const exactTitles = matchTitle(searchResults);
+  if (exactTitles.length === 0) {
+    throw new Error(`No exact matches found: ['${video.name}' not found in results of [${_.map(searchResults.Search, (r) => r.Title)}]]`);
+  } else if (exactTitles.length === 1) {
+    return getById(_.head(exactTitles));
+  }
+
+  const exactTypes = _.filter(exactTitles, { Type: type });
+  if (exactTypes.length === 1) {
+    return getById(_.head(exactTypes));
+  }
+
+  const allMatches = await Promise.all(_.map(exactTypes, getById));
+  return _.reduce(allMatches, (acc, val) => (
+    durationDiff(acc.Runtime) < durationDiff(val.Runtime) ? acc : val
+  ));
 };
 
 export default getOmdb;
