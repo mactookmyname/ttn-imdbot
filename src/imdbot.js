@@ -14,6 +14,7 @@ import {
   MINIMUM_DURATION,
   TRIVIA_AUTO_DURATION,
   TRIVIA_AUTO_INTERVAL,
+  TRIVIA_AUTO_REQUIRED_MINIMUM,
 } from './config';
 import getOmdb from './data/omdb';
 import { getTrivia, getParentalGuide } from './data/imdb';
@@ -79,7 +80,7 @@ export default function getImdbot() {
     try {
       const imdb = await getOmdb(video);
       const trivia = _.shuffle(await getTrivia(imdb.imdbID));
-      const triviaTimer = startTriviaTimeout();
+      const triviaTimer = (trivia.length >= TRIVIA_AUTO_REQUIRED_MINIMUM) && startTriviaTimeout();
       const parentalGuide = await getParentalGuide(imdb.imdbID);
 
       // need this extra catch to prevent falling into async try/catch block on imgur error

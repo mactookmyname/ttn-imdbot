@@ -15,3 +15,7 @@ export const TRIVIA_AUTO_DURATION = 900000;
 
 // How often to check for auto-broadcast timeout
 export const TRIVIA_AUTO_INTERVAL = 30000;
+
+// Minimum amount of trivia required to auto-send it,
+// prevents spam for common shows w/ just a few pieces
+export const TRIVIA_AUTO_REQUIRED_MINIMUM = 8;
