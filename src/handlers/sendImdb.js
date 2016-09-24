@@ -1,6 +1,7 @@
+import _ from 'lodash';
+
 import sendMessages from '../utils/sendMessages';
 import splitMessages from '../utils/splitMessages';
-import _ from 'lodash';
 
 const getHeader = (imdb) => {
   if (!imdb) {
@@ -13,7 +14,7 @@ const getHeader = (imdb) => {
 };
 
 const getMessages = ({ imdb, imdbImage }) => ([
-  imdbImage.data.link,
+  _.get(imdbImage, 'data.link'),
   getHeader(imdb),
   ...splitMessages(imdb.Plot),
 ]);
