@@ -44,7 +44,10 @@ export default function getImdbot() {
       clearInterval(state.triviaTimer);
     }
 
-    state = { ...initialState };
+    state = {
+      ...initialState,
+      triviaLastSent: new Date(),
+    };
   };
 
   const setState = (newState) => {
