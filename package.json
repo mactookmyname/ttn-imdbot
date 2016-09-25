@@ -16,18 +16,39 @@
   },
   "devDependencies": {
     "babel-eslint": "^6.1.2",
+    "babel-register": "^6.14.0",
     "eslint": "^3.5.0",
     "eslint-config-airbnb-base": "^7.1.0",
     "eslint-plugin-babel": "^3.3.0",
-    "eslint-plugin-import": "^1.15.0"
+    "eslint-plugin-import": "^1.15.0",
+    "mocha": "^3.0.2",
+    "nyc": "^8.3.0"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/mactookmyname/ttn-imdbot.git"
   },
   "scripts": {
-    "start": "nf start"
+    "start": "nf start",
+    "test": "mocha -R nyan -r babel-register src/**/*.spec.js",
+    "coverage": "nyc npm test"
   },
   "author": "Joel McMurray <joel.mcmurray@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "nyc": {
+    "all": true,
+    "include": [
+      "src/**/*.js"
+    ],
+    "exclude": [
+      "src/**/*.spec.js"
+    ],
+    "reporter": [
+      "lcov",
+      "text-summary"
+    ],
+    "require": [
+      "babel-register"
+    ]
+  }
 }

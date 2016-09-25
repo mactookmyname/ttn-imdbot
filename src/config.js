@@ -19,3 +19,9 @@ export const TRIVIA_AUTO_INTERVAL = 30000;
 // Minimum amount of trivia required to auto-send it,
 // prevents spam for common shows w/ just a few pieces
 export const TRIVIA_AUTO_REQUIRED_MINIMUM = 8;
+
+// How much to delay between sending messages via bot, too fast delivers out of order?
+export const MSG_DELAY = 200;
+
+// Max chars allowed in a single message through the bot
+export const TTN_MAX_MSG_SIZE = 250;

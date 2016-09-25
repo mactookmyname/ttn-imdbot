@@ -2,13 +2,15 @@
   "parser": "babel-eslint",
   "extends": "airbnb-base",
   "env": {
-    "node": true
+    "node": true,
+    "mocha": true,
+    "es6": true
   },
   "plugins": [
     "babel"
   ],
   "rules": {
     "arrow-parens": 0,
-    "babel/arrow-parens": 2,
+    "babel/arrow-parens": 0,
   }
 }
