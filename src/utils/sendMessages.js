@@ -34,8 +34,7 @@ const sendMessages = (bot, messages, target) => {
       });
       _.delay(() => {
         _.attempt(() =>
-          // bot.call(botCommand(target), blob)
-          console.log(blob)
+          bot.call(botCommand(target), blob)
         );
         resolve(blob);
       }, idx * MSG_DELAY);

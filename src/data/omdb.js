@@ -3,6 +3,7 @@ import _ from 'lodash';
 
 import { SERIES_DURATION } from '../config';
 import stripYear from '../utils/stripYear';
+import getTitle from './titles';
 
 /**
  * Attemps to get imdb info based on the following logic:
@@ -12,7 +13,7 @@ import stripYear from '../utils/stripYear';
  **/
 const getOmdb = async (video) => {
   // Removes trailing year names on title which causes api lookup to fail
-  const name = stripYear(video.name);
+  const name = getTitle(stripYear(video.name));
 
   // Searches specifically for series instead of movie for shorter durations
   const type = video.duration < SERIES_DURATION ? 'series' : 'movie';
