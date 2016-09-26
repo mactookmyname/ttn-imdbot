@@ -1,17 +1,25 @@
 /* eslint-disable no-param-reassign */
+import _ from 'lodash';
+
 import sendMessages from '../utils/sendMessages';
-import splitMessages from '../utils/splitMessages';
 
 export default (bot, state, user) => {
+  const trivia = _.get(state, 'trivia', []);
+  const username = _.get(user, 'username');
+
+  if (trivia.length === 0) {
+    return sendMessages(bot, [':no_entry_sign: No Trivia available. :disappointed:'], username);
+  }
+
   // Reset our last sent date so our auto trivia gets extended
   state.triviaLastSent = new Date();
 
-  const i = state.triviaIndex;
-  const title = state.imdb.Title;
-  const trivia = state.trivia[i];
+  const i = _.get(state, 'triviaIndex');
+  const title = _.get(state, 'imdb.Title');
+  const triviaText = trivia[i];
 
-  const u = user ? `@${user.username} ` : '';
-  const msg = `:tada: ${u}${title} Trivia ${i + 1} out of ${state.trivia.length}: ${trivia}`;
-  sendMessages(bot, splitMessages(msg));
-  state.triviaIndex = i === (state.trivia.length - 1) ? 0 : i + 1;
+  const u = username ? `@${username} ` : '';
+  const msg = `:tada: ${u}${title} Trivia ${i + 1} out of ${trivia.length}: ${triviaText}`;
+  state.triviaIndex = i === (trivia.length - 1) ? 0 : i + 1;
+  return sendMessages(bot, msg);
 };

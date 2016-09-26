@@ -1,7 +1,10 @@
-import sendMessages from '../utils/sendMessages';
-import splitMessages from '../utils/splitMessages';
+import _ from 'lodash';
 
-export default (bot, { parentalGuide }, { username }) => {
+import sendMessages from '../utils/sendMessages';
+
+export default (bot, state, user) => {
+  const parentalGuide = _.get(state, 'parentalGuide');
+  const username = _.get(user, 'username');
   if (!parentalGuide) {
     return sendMessages(bot, [':no_entry_sign: No Drug & Alcohol usage found. :disappointed:'], username);
   }
@@ -9,5 +12,5 @@ export default (bot, { parentalGuide }, { username }) => {
   const u = username ? `@${username} ` : '';
   const rating = parentalGuide.rating ? `Rating: ${parentalGuide.rating} - ` : '';
   const msg = `:weed: ${u}Drug & Alcohol Usage - ${rating}${parentalGuide.summary}`;
-  return sendMessages(bot, splitMessages(msg));
+  return sendMessages(bot, msg);
 };

@@ -3,6 +3,7 @@ import assert from 'assert';
 import { parseParentalHtml } from './imdb';
 
 describe('data/imdb', () => {
+  // TODO: workaholics error where it picks up the "Alcohol/Drugs/Smoking" part of the rating
   describe('parseParentalHtml', () => {
     it('should return a summary', () => {
       const summary = 'foobar';
