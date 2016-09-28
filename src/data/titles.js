@@ -5,6 +5,6 @@ const mappings = {
   MXC: 'Most Extreme Elimination Challenge',
 };
 
-const getTitle = title => _.get(mappings, title, title);
+const getTitle = title => _.get(mappings, title, title || '');
 
 export default getTitle;
