@@ -1,8 +1,8 @@
 import createBot, {
   MESSAGES_ADD,
   SOCKET_READY,
-  VIDEO_PLAY,
   WHISPERS_RECEIVE,
+  VIDEO_START,
   withAuth,
 } from '@ttn/bot';
 import imgur from 'imgur';
@@ -120,7 +120,7 @@ export default function getImdbot() {
     });
   };
 
-  const onSocket = (data) => getImdb(_.get(data, 'video'));
+  const onSocket = (data) => getImdb(_.get(data, 'queue.video'));
 
   const start = ({ username, password }) => {
     bot.debug('Starting up imdbot...');
@@ -136,7 +136,7 @@ export default function getImdbot() {
   bot.subscribe(MESSAGES_ADD, onMessage);
   bot.subscribe(WHISPERS_RECEIVE, onMessage);
   bot.subscribe(SOCKET_READY, onSocket);
-  bot.subscribe(VIDEO_PLAY, getImdb);
+  bot.subscribe(VIDEO_START, getImdb);
 
   return {
     start,
