@@ -7,12 +7,12 @@ export default (bot, state, user) => {
   const trivia = _.get(state, 'trivia', []);
   const username = _.get(user, 'username');
 
+  // Reset our last sent date so our auto trivia gets extended
+  state.triviaLastSent = new Date();
+
   if (trivia.length === 0) {
     return sendMessages(bot, [':no_entry_sign: No Trivia available. :disappointed:'], username);
   }
-
-  // Reset our last sent date so our auto trivia gets extended
-  state.triviaLastSent = new Date();
 
   const i = _.get(state, 'triviaIndex');
   const title = _.get(state, 'imdb.Title');
