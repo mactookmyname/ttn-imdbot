@@ -13,7 +13,7 @@ import getTitle from './titles';
  **/
 const getOmdb = async (video) => {
   // Removes trailing year names on title which causes api lookup to fail
-  const name = getTitle(stripYear(video.name));
+  const name = _.flow([stripYear, _.trim, getTitle])(video.name);
 
   // Searches specifically for series instead of movie for shorter durations
   const type = video.duration < SERIES_DURATION ? 'series' : 'movie';

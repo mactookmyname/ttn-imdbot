@@ -10,19 +10,21 @@ export const getHeader = (imdb) => {
     return 'IMDB information currently unavailable.';
   }
 
-  const rating = imdb.rating ? `${imdb.rating}/10` : '';
+  const rating = imdb.imdbRating ? `${imdb.imdbRating}/10 (${imdb.imdbVotes} votes)` : '';
   const year = _.has(imdb, 'Year') ? `(${imdb.Year})` : '';
+  const awards = imdb.Awards ? `:trophy: Awards: ${imdb.Awards}` : '';
   const imdburl = _.has(imdb, 'imdbID') ? `http://www.imdb.com/title/${imdb.imdbID}` : '';
   return _.compact([
     `:movie_camera: Now Playing: ${imdb.Title}`,
     year,
     rating,
+    awards,
     imdburl,
   ]).join(' - ');
 };
 
 const getMessages = state => ([
-  _.get(state, 'imdbImage.data.link'),
+  state.imdb.Poster || _.get(state, 'imdbImage.data.link'),
   getHeader(_.get(state, 'imdb')),
   _.get(state, 'imdb.Plot'),
 ]);
