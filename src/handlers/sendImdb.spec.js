@@ -6,11 +6,11 @@ describe('handlers/sendImdb', () => {
   describe('getHeader', () => {
     const Title = 'Joy of Painting';
     const Year = '1980';
-    const rating = 5;
+    const imdbRating = 5;
     const imdbID = 'foo';
 
     it('should return a now playing msg with a movie title', () => {
-      const imdb = { Title };
+      const imdb = { Title, Year: 'N/A', imdbRating: 'N/A', Awards: 'N/A' };
       const expected = `:movie_camera: Now Playing: ${Title}`;
       assert.equal(getHeader(imdb), expected);
     });
@@ -21,15 +21,15 @@ describe('handlers/sendImdb', () => {
       assert.equal(getHeader(imdb), expected);
     });
 
-    it('should return a now playing msg with a movie title, year, and rating', () => {
-      const imdb = { Title, Year, rating };
-      const expected = `:movie_camera: Now Playing: ${Title} - (${Year}) - ${rating}/10`;
+    it('should return a now playing msg with a movie title, year, and imdbRating', () => {
+      const imdb = { Title, Year, imdbRating };
+      const expected = `:movie_camera: Now Playing: ${Title} - (${Year}) - ${imdbRating}/10`;
       assert.equal(getHeader(imdb), expected);
     });
 
-    it('should return a now playing msg with a movie title, year, rating, and link', () => {
-      const imdb = { Title, Year, rating, imdbID };
-      const expected = `:movie_camera: Now Playing: ${Title} - (${Year}) - ${rating}/10 - http://www.imdb.com/title/${imdbID}`;
+    it('should return a now playing msg with a movie title, year, imdbRating, and link', () => {
+      const imdb = { Title, Year, imdbRating, imdbID };
+      const expected = `:movie_camera: Now Playing: ${Title} - (${Year}) - ${imdbRating}/10 - http://www.imdb.com/title/${imdbID}`;
       assert.equal(getHeader(imdb), expected);
     });
 

@@ -31,8 +31,15 @@ const getOmdb = async (video) => {
   };
 
   const getById = ({ imdbID }) => request({ ...omdbOptions, qs: { i: imdbID } });
+
+  // Strip special chars which throw off matching, e.g. WALL-E vs WALL·E
+  const stripNonAlphanumeric = (input) => input.replace(/\W/g, '');
+
   const matchTitle = (results) => (
-    _.filter(results.Search, (r) => _.eq(_.toLower(r.Title), _.toLower(name)))
+    _.filter(results.Search, (r) => _.eq(
+      stripNonAlphanumeric(_.toLower(r.Title)),
+      stripNonAlphanumeric(_.toLower(name))
+    ))
   );
   const durationDiff = (runtime) => Math.abs((parseInt(runtime, 10) * 60) - video.duration);
 

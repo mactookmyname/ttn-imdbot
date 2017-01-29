@@ -10,21 +10,25 @@ export const getHeader = (imdb) => {
     return 'IMDB information currently unavailable.';
   }
 
-  const rating = imdb.imdbRating ? `${imdb.imdbRating}/10 (${imdb.imdbVotes} votes)` : '';
-  const year = _.has(imdb, 'Year') ? `(${imdb.Year})` : '';
-  const awards = imdb.Awards ? `:trophy: Awards: ${imdb.Awards}` : '';
-  const imdburl = _.has(imdb, 'imdbID') ? `http://www.imdb.com/title/${imdb.imdbID}` : '';
+  const isValidProp = (prop) => _.has(imdb, prop) && _.get(imdb, prop) !== 'N/A';
+
+  const rating = isValidProp('imdbRating') ? `${imdb.imdbRating}/10` : '';
+  const votes = isValidProp('imdbVotes') ? `(${imdb.imdbVotes} votes)` : '';
+  const year = isValidProp('Year') ? `(${imdb.Year})` : '';
+  const awards = isValidProp('Awards') ? `:trophy: Awards: ${imdb.Awards}` : '';
+  const imdburl = isValidProp('imdbID') ? `http://www.imdb.com/title/${imdb.imdbID}` : '';
   return _.compact([
     `:movie_camera: Now Playing: ${imdb.Title}`,
     year,
     rating,
+    votes,
     awards,
     imdburl,
   ]).join(' - ');
 };
 
 const getMessages = state => ([
-  state.imdb.Poster || _.get(state, 'imdbImage.data.link'),
+  _.get(state, 'imdb.Poster', _.get(state, 'imdbImage.data.link')),
   getHeader(_.get(state, 'imdb')),
   _.get(state, 'imdb.Plot'),
 ]);
